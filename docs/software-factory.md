@@ -1,5 +1,8 @@
 # Issue-driven software factory
 
+## Current mode and policy precedence
+The active mode is the owner-authorized single-worker local Hermes cron described in docs/factory-loop.md. It may implement approved owner-authored issues and merge after exact-head CI and separate agent review pass, without routine human approval. It is not sandboxed and must not accept arbitrary outside-contributor work. The sandbox/lease/controller requirements below describe the future multi-worker mode, not capabilities already deployed. AGENTS.md sets security boundaries; docs/factory-loop.md defines current execution; future designs cannot silently enable extra workers. Escalate destructive production changes, unapproved spending, access-policy uncertainty or unresolved product decisions.
+
 ## Source of truth and states
 GitHub Issues hold goal, acceptance checks, dependencies, risk, current claim, PR and evidence. Versioned docs hold architecture and policy, not a second task database.
 
@@ -11,11 +14,11 @@ Suggested labels: `state:triage`, `state:ready`, `state:running`, `state:review`
 3. Worker gets an ephemeral sandbox, scoped credentials, and a branch `feat/<issue>-<slug>`. Git worktrees reduce collisions but do not isolate secrets or processes.
 4. Worker runs RED/GREEN tests and posts bounded, sanitized evidence; opens PR referencing issue. Max three repair attempts, then a blocker explaining the failing gate. No recursive unattended retry loops.
 5. CI runs from PR code with read-only token and no production secrets. Unit/domain tests, lint, typecheck, build and browser tests are independent of model claims. Save Playwright reports/traces with short retention and synthetic data.
-6. Separate reviewer checks exact head SHA and acceptance. QA explores desktop/mobile and files reproducible bugs as issues. Never approve your own patch. Auth, workflow, permission, production and billing changes require a human reviewer.
+6. Separate reviewer checks exact head SHA and acceptance. QA explores desktop/mobile and files reproducible bugs as issues. Never approve your own patch. Auth and workflow changes require focused independent review. Destructive production changes, unapproved spending and unresolved security decisions require human escalation.
 7. Trusted merge controller rechecks required CI + independent review on exact SHA. Merge serially (or merge queue); stale evidence cannot authorize a newer commit. Verify post-merge/deployment health before closing deployment work.
 
 ## First rollout
-This repository starts with manually supervised agent execution plus automated PR verification. It does NOT yet contain or run an unattended dispatcher. Prove several real issue-to-PR cycles before enabling unattended dispatch. The next implementation should be a GitHub App-triggered trusted control plane, not a public issue workflow that directly executes arbitrary text on a credentialed self-hosted runner.
+This repository currently runs one owner-authorized local cron session per tick plus automated PR verification. It does not run a sandboxed multi-worker dispatcher. Prove real issue-to-PR cycles before migrating to parallel dispatch. The next implementation should be a GitHub App-triggered trusted control plane, not a public issue workflow that directly executes arbitrary text on a credentialed self-hosted runner.
 
 ## Future dispatcher safety contract
 Validate GitHub webhook HMAC and event sender permissions; dedupe delivery IDs; persist leases and attempt budgets; enforce repository allowlist, max concurrency and per-run cost/time cap. Use short-lived GitHub App installation tokens and an external atomic claim store. Worker cannot mint its own approval, change policy or obtain production secrets. Never interpolate issue bodies into shell commands. Pin the dispatched base SHA, save tested head SHA, and expire claims on crash. Do not start paid infrastructure to host this without owner approval.

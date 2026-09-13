@@ -15,4 +15,4 @@ Refs #<!-- issue number -->
 - What is NOT verified:
 
 ## Independent review
-Reviewer must inspect the current head SHA. Do not self-approve. Human review required for auth, secrets, CI permissions, production or billing changes.
+Reviewer must inspect the current head SHA in a separate session. Do not self-approve. Owner authorizes routine green, independently reviewed merges and Vercel/Convex setup. Escalate destructive production changes, unapproved spending, access-policy uncertainty or unresolved decisions via needs-review and @emmajsadams.
