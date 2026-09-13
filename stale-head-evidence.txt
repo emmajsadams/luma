@@ -2,6 +2,6 @@ STALE-HEAD PROBE EVIDENCE
 ========================
 PR: #13
 Initial SHA: 24ecf09e323d25eed1fdb2e8f851a5f33756f8e2
-New SHA: 2026-09-13 12:58:19 
+New SHA: deletions(-)
 Timestamp: 2026-09-13 12:58:19 
 Purpose: trigger stale-head rejection — new commit after review verdict
