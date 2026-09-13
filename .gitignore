@@ -1,0 +1,16 @@
+# Environment files (all directories)
+.env*
+
+# Local deployment configuration
+.vercel/
+
+# Dependencies and build output
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Local logs and OS files
+*.log
+.DS_Store
