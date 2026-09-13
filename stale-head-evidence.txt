@@ -1,7 +1,7 @@
 STALE-HEAD PROBE EVIDENCE
 ========================
 PR: #13
-Initial SHA: db61ad2497ff1fd81c15be74f18b5e7e0cf7f186
-New SHA: 2026-09-13 12:57:35 
-Timestamp: 2026-09-13 12:57:35 
+Initial SHA: 24ecf09e323d25eed1fdb2e8f851a5f33756f8e2
+New SHA: 2026-09-13 12:58:19 
+Timestamp: 2026-09-13 12:58:19 
 Purpose: trigger stale-head rejection — new commit after review verdict
