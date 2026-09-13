@@ -10,6 +10,8 @@ node_modules/
 out/
 coverage/
 *.tsbuildinfo
+playwright-report/
+test-results/
 
 # Local logs and OS files
 *.log
