@@ -1,0 +1,5 @@
+INITIAL PROBE EVIDENCE
+======================
+Branch: probe/issue-11-build
+SHA: 2026-09-13 12:56:51 
+Purpose: establish branch divergence from main for stale-head probe
