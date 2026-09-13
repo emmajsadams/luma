@@ -1,0 +1,22 @@
+name: Bug report
+description: Reproducible defect for a regression-test-first fix
+title: "[Bug] "
+body:
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Include route, browser and viewport. Use synthetic data only.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Commit SHA, sanitized screenshot/trace, console error and severity.
