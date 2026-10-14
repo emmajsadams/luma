@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 test("install manifest links to real correctly sized icons", async ({
   page,
   request,
