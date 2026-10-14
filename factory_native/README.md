@@ -36,15 +36,18 @@ independent review or authorize publication. No inference call occurs in staging
 
 ## Stage-only apply (requires separate permission to mutate the named board)
 
-Not executed during this implementation: the owner prohibited board mutation.
-Once the parent audit is integrated and staging is authorized:
+Only run with explicit staging authorization for the named board:
 
     python -m factory_native.adapter stage --approval /absolute/approval.json --board existing-board --receipts /absolute/receipts.sqlite --apply-stage-only
 
 Use one durable receipt database for this adapter; never replace/delete it to retry.
 SQLite records intent before create, stores the exact returned ID, then reads that
-ID back with native `show --json`. It checks revision key, title/body, blocked state,
-model/provider, completion contract and absence of assignee. Successful retries
+ID back with native `show --json`. It checks the receipt's exact ID and board,
+exact revision-bearing body/title, blocked state, model/provider, completion
+contract, absence of assignee, scratch workspace with null path, creator and retry
+limit. Public task JSON omits `idempotency_key`; the receipt binds the revision key
+to the exact ID, but this is NOT exposed native-key verification. If a CLI exposes
+that field, it must match (including rejecting null). Successful retries
 read the same ID; they do not create or mark anything delivered. A revision cannot
 move between boards in the same receipt database. The key excludes board so one
 approved revision has one stable key. Separate databases/hosts are NOT coordinated.
@@ -56,8 +59,8 @@ same stage-only command. All readback checks still apply. A saved ID cannot be
 replaced; archived/changed/missing cards require human audit, not recreation.
 
 The adapter checks installed create/show/board help before planning/applying.
-JSON shapes were verified by reading installed `hermes_cli/kanban.py`: create
-returns the task object, show returns an object containing `task`. Unknown shapes
+Installed CLI source and live show establish the public shape: create returns
+the task object, show returns an object containing `task`. Unknown shapes
 fail closed. Help checks detect missing flags, not arbitrary semantic CLI changes.
 There is still a GitHub fetch-to-create race; blocked staging is not a dispatch
 approval. Future execution must independently revalidate scope and revision.
@@ -71,13 +74,30 @@ approval. Future execution must independently revalidate scope and revision.
     pnpm build
     pnpm test:e2e
 
-Observed RED: initial missing adapter import; subsequently three behavioral
-failures for bool/int/float approval coercion. GREEN: 11 Python tests, 4 Vitest
-tests and 4 Playwright desktop/mobile tests; lint, typecheck and build passed.
-Live gh issue-10 snapshot and dry-run against installed native help succeeded.
-Create/show side effects are exercised with synthetic CLI responses only: real
-native task creation/reconciliation has NOT been integration-tested. No tasks or
-swarms were dispatched and no board/profile/gateway/cron/service was modified.
+Live compatibility correction, 2026-10-13: the parent had created the approved
+board/task through this adapter, but create validation and retry refused because
+public task JSON omitted `idempotency_key`. The durable receipt had already saved
+the exact ID. Read-only native show confirmed that shape and zero task runs.
+
+Observed RED: the saved-ID/public-shape regression failed with `Refused` before
+the verifier change. GREEN: all 14 Python tests passed, including absent/exposed
+key behavior, exact-ID retry, and missing/mismatched required fields. Fixtures use
+synthetic content with the observed public fields, not an invented required key.
+Lint, typecheck, 4 Vitest tests, production build and 4 Playwright desktop/mobile
+tests passed. No application UI was changed.
+
+Using the existing owner-approved issue-10 snapshot and durable receipt, two real
+stage-only applies both returned `staged-blocked` and the same saved task ID.
+Final native show confirmed blocked/unassigned scratch routing, expected creator,
+and `runs: []`, as before retry. No replacement task or board was created in this
+correction; no dispatch, swarm, profile, gateway, cron or service changes occurred.
+Private receipt locations and native IDs are intentionally not committed.
+
+This verifies real saved-ID reconciliation, not a fresh post-fix create trial,
+crash recovery, native key exposure, or inference availability. Runtime 480 is
+requested in create argv but not exposed/verified by this public readback. Native
+CLI still warns that gateways were not restarted after an update; their loaded
+code/settings are not attested. No restart was attempted.
 
 Reuse investigation read the dirty sibling controller's intake and gh boundary;
 reused the pattern of gh authentication, argv subprocesses and suppressed CLI
@@ -87,3 +107,6 @@ This is not unattended operation, sandboxing, credential isolation, distributed
 idempotency or an independent review. Parent must integrate the audit before push
 or PR. Full #10 worker leases/recovery/isolation and #11 adversarial exact-head
 review/merge gating remain out of this staging slice.
+
+See [native factory/swarm boundaries](../docs/native-factory-swarm.md) for the
+audit summary and activation gates; full issue acceptance remains authoritative.

@@ -21,7 +21,9 @@ class AdapterTests(unittest.TestCase):
 
     def task(self):
         return dict(id='t_exact-123', status='blocked', title=self.issue['title'],
-                    body=self.plan['body'], idempotency_key=self.plan['key'],
+                    body=self.plan['body'],
+                    workspace_kind='scratch', workspace_path=None,
+                    created_by='luma-native', max_retries=1,
                     model_override='gpt-6-astra', provider_override='openai-codex',
                     completion_contract='emmajsadams/luma', assignee=None)
 
@@ -82,6 +84,41 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(sum('create' in c for c in calls), 1)
         self.assertNotIn('delivered', first)
 
+    def test_public_shape_without_key_recovers_saved_create_id(self):
+        # The real CLI omits idempotency_key from both create and show.
+        import sqlite3
+        with sqlite3.connect(self.db) as db:
+            db.execute('CREATE TABLE receipts (key TEXT PRIMARY KEY, board TEXT NOT NULL, task_id TEXT)')
+            db.execute('INSERT INTO receipts VALUES (?, ?, ?)',
+                       (self.plan['key'], self.plan['board'], self.task()['id']))
+        calls = []
+        def run(argv):
+            calls.append(argv)
+            return {'task': self.task(), 'runs': []}
+        first = a.stage(self.plan, self.db, run)
+        self.assertEqual(first, a.stage(self.plan, self.db, run))
+        self.assertEqual(first['task_id'], self.task()['id'])
+        self.assertEqual(calls, [
+            ['hermes', 'kanban', '--board=audit-board', 'show', '--json', '--', self.task()['id']]
+        ] * 2)
+
+    def test_optional_key_when_exposed_must_match(self):
+        for value in [self.plan['key'], 'wrong', None, '']:
+            task = dict(self.task(), idempotency_key=value)
+            if value == self.plan['key']:
+                a.verify_task(task, self.plan, task['id'])
+            else:
+                with self.assertRaises(a.Refused):
+                    a.verify_task(task, self.plan, task['id'])
+
+    def test_required_public_fields_cannot_be_missing(self):
+        for field in self.task():
+            with self.subTest(field=field):
+                task = self.task()
+                del task[field]
+                with self.assertRaises(a.Refused):
+                    a.verify_task(task, self.plan, self.task()['id'])
+
     def test_unknown_output_leaves_uncertain_intent(self):
         with self.assertRaises(a.Refused):
             a.stage(self.plan, self.db, lambda argv: {'unexpected': 'output'})
@@ -94,7 +131,12 @@ class AdapterTests(unittest.TestCase):
     def test_readback_mismatch_fails_closed(self):
         task = self.task()
         for field, value in [('id', 't_other'), ('status', 'ready'),
-                             ('idempotency_key', 'other'), ('model_override', 'other')]:
+                             ('idempotency_key', 'other'), ('model_override', 'other'),
+                             ('provider_override', 'other'), ('title', 'other'),
+                             ('body', 'other'), ('completion_contract', 'other'),
+                             ('assignee', 'default'), ('workspace_kind', 'worktree'),
+                             ('workspace_path', '/unexpected'), ('created_by', 'other'),
+                             ('max_retries', 2)]:
             with self.subTest(field=field):
                 db = Path(self.tmp.name) / (field + '.sqlite')
                 def run(argv):

@@ -114,10 +114,16 @@ def task_id(task):
 def verify_task(task, planned, exact_id):
     require(task_id(task) == exact_id, 'Native task id changed')
     expected = dict(status='blocked', title=planned['title'], body=planned['body'],
-                    idempotency_key=planned['key'], model_override='gpt-6-astra',
+                    workspace_kind='scratch', workspace_path=None,
+                    created_by='luma-native', max_retries=1, model_override='gpt-6-astra',
                     provider_override='openai-codex', completion_contract=REPO, assignee=None)
     require(all(k in task and task[k] == v for k, v in expected.items()),
             'Native task mismatch or no longer blocked; manual audit required')
+    # Public CLI task JSON may omit the native dedupe key. Identity is bound
+    # by the durable receipt's board/exact ID and the full revision-bearing body.
+    # An exposed key is additional evidence, never an assumed readback guarantee.
+    if 'idempotency_key' in task:
+        require(task['idempotency_key'] == planned['key'], 'Native idempotency key mismatch')
 
 
 def stage(planned, receipt_path, run=command, reconcile_id=None):
