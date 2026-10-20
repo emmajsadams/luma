@@ -1,8 +1,10 @@
 # Native factory staging adapter
 
 This is the bounded first slice of #10/#11, not their full acceptance delivery.
-GitHub remains canonical. No controller, scheduler, swarm dispatch, review verdict,
-merge gate, or automatic merge is implemented. No issue is marked delivered.
+GitHub remains canonical. No controller, scheduler, swarm dispatch, authenticated
+review verdict, operational merge gate, or automatic merge is implemented. No issue
+is marked delivered. The pure merge eligibility policy is documented in
+`docs/factory-backlog.md`; it does not change staging permissions.
 
 ## Trust and approval
 
