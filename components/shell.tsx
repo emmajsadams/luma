@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { UserButton } from "@clerk/nextjs";
 import {
   Orbit,
   LayoutDashboard,
@@ -52,7 +53,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div className="profile">
           <span className="avatar">L</span>
           <div>
-            Little explorer<small>Personal demo space</small>
+            <UserButton /><small>Private account space</small>
           </div>
         </div>
       </aside>
@@ -66,15 +67,15 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </span>
           <span className="status">
             <i />
-            LOCAL DEMO
+            ACCOUNT WORKSPACE
           </span>
         </header>
         <main id="main" tabIndex={-1}>
           {children}
         </main>
         <footer>
-          Demo workspace · changes last until refresh
-          <span>No account, cloud sync, or backend connected.</span>
+          Your private workspace
+          <span>Tasks sync through Convex. Notes and calendar are not yet available.</span>
         </footer>
       </div>
     </div>
